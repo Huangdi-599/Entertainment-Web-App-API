@@ -42,7 +42,7 @@ class Movies(db.Model):
     def __init__(self, title, thumbnails, year, category, rating, isbookmarked, istrending):
         self.title = title
         self.thumbnails = thumbnails
-        self.years = year
+        self.year = year
         self.category = category
         self.rating = rating
         self.isbookmarked = isbookmarked

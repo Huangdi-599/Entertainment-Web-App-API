@@ -10,7 +10,7 @@ from models import setup_db,Movies,Category,db
 ############Paginations#############
 
 def pagination (request, sel):
-    #Implement pagination, get the arg of page and if it dont exist, then it will default to 1 
+    #Implement pagination, get the arg of page and if it dont exist, then it will default to 1
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * 10
     end = start + 10
@@ -25,18 +25,17 @@ def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
     CORS(app)
-  
+
     #cors = CORS(app, resources={r"/categories": {"origins": "http://localhost:5000"}}
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH,DELETE, OPTIONS')
         return response
-    
-    #done
+
     #########MOVIE CATEGORIES######
     @app.route('/categories', methods=['GET'])
-    
+
     #@cross_origin()
     def get_categories():
         try:
@@ -49,7 +48,7 @@ def create_app(test_config=None):
                 })
         except:
             abort(500)
-    
+
     #done
     ###########HOME OR GET MOVIES##########
     @app.route('/', methods=['GET'])
@@ -67,21 +66,40 @@ def create_app(test_config=None):
         except:
             abort(404)
 
-    #done
+    #########GET MOVIE BY ID #############
+    @app.route("/movie/<int:movie_id>", methods=["GET"])
+    def get_movies_by_id (movie_id):
+        movie = {}
+        result = Movies.query.filter(Movies.id == movie_id).one_or_none()
+        if result is None:
+            abort(404)
+            print (result)
+        else:
+            movie['id'] = result.id
+            movie['title'] = result.title
+            movie['thumbnails']  = result.thumbnails
+            movie['category']  = result.category
+            movie['rating']  = result.year
+            movie['isbookmarked']  = result.isbookmarked
+            movie['istrending'] = result.istrending
+        return jsonify({
+            "success": True,
+            "data" : movie
+            })
+
     #########DELETE MOVIE#############
     @app.route("/movie/<int:movie_id>", methods=["DELETE"])
     def delete_movie (movie_id):
-        try:    
-            movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
+        movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
+        if movie is None:
+            abort(404)
+        else:
             movie.delete()
             return jsonify({
-                    "success": True,
-                    "deleted": movie_id,
-                })
-        except:
-            abort(422)
-    
-    #not complete
+                "success": True,
+                "deleted": movie_id,
+            })
+
     ############CREATE A NEW MOVIE#################
     @app.route("/movie/create", methods=["POST"])
     def create_movie():
@@ -94,21 +112,21 @@ def create_app(test_config=None):
         new_isbookmarked = data_body["isbookmarked"]
         new_istrending = data_body["istrending"]
 
-        print(new_isbookmarked)
-        print(new_istrending)
-
-        #movie = Movies.query.filter(Movies.title == new_title).one_or_none()
-        #if movie is None:
-        new_movie = Movies(
-            title =  new_title,
-            thumbnails = new_thumbnails,
-            year = new_year,            
-            category = new_category,
-            rating = new_rating,
-            isbookmarked = new_isbookmarked,
-            istrending = new_istrending
-        )
-        new_movie.insert()
+        movie = Movies.query.filter(Movies.title == new_title).one_or_none()
+        if movie is None:
+            new_movie = Movies(
+                title =  new_title,
+                thumbnails = new_thumbnails,
+                year = new_year,
+                category = new_category,
+                rating = new_rating,
+                isbookmarked = new_isbookmarked,
+                istrending = new_istrending
+            )
+            new_movie.insert()
+        else:
+            abort(400)
+            #print("movie title already exist ")
         sel = Movies.query.order_by(Movies.id).all()
         paged_que = pagination(request, sel)
         return jsonify({
@@ -117,10 +135,7 @@ def create_app(test_config=None):
             'data' : paged_que,
             'total_movies':len(sel)
         })
-        #else:
-            #abort(400)
-            #print("movie title already exist ")
-    
+
     #done
     ######MOVIE SEARCH################
     @app.route('/movie/search', methods=['POST'])
@@ -137,17 +152,17 @@ def create_app(test_config=None):
                 info = {
                     "title" : res.title,
                     "thumbnails" :res.thumbnails,
-                    "year": res.year,            
+                    "year": res.year,
                     "category": res.category,
                     "rating" :res.rating,
                     "isbookmarked": res.isbookmarked,
                     "istrending": res.istrending
 
                 }
-                data.append(info)    
+                data.append(info)
             count = len(results)
             return jsonify({
-            
+
                     'success': True,
                     'totalMovies' : count,
                     'searched_results' : data
@@ -171,7 +186,7 @@ def create_app(test_config=None):
 
                     "title" : res.title,
                     "thumbnails" :res.thumbnails,
-                    "year": res.year,            
+                    "year": res.year,
                     "category": res.category,
                     "rating" :res.rating,
                     "isbookmarked": res.isbookmarked,
@@ -189,13 +204,13 @@ def create_app(test_config=None):
             abort(404)
 
 
-  
+
 
 
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
-            "success": False, 
+            "success": False,
             "error": 404,
             "message": "Requested page Not found"
             }), 404
@@ -204,7 +219,7 @@ def create_app(test_config=None):
     @app.errorhandler(422)
     def unprocessed_request(error):
         return jsonify({
-            "success": False, 
+            "success": False,
             "error": 422,
             "message": "Server can't process your request"
             }), 422
@@ -213,7 +228,7 @@ def create_app(test_config=None):
     @app.errorhandler(400)
     def invalid_request(error):
         return jsonify({
-            "success": False, 
+            "success": False,
             "error": 400,
             "message": "Bad Request"
             }), 400
@@ -222,11 +237,10 @@ def create_app(test_config=None):
     @app.errorhandler(500)
     def internal_server_error(error):
         return jsonify({
-            "success": False, 
+            "success": False,
             "error": 500,
             "message": "internal server error"
             }),500
 
 
     return app
-

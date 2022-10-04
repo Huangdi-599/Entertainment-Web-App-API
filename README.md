@@ -78,19 +78,37 @@ The `--reload` flag will detect file changes and restart the server automaticall
 
 `GET '/'`
 
--Gets a dictionary of categories, where the keys are the ids and the value is the category's associated string.
+-Gets an array of movies dictionarys,contain each movie attributes
 
 - There are no request arguments.
 
-- Returns: An object with a single key, `categories`, that contains an object with the key: value pairs `id: category string`.
+- Returns: An Array that contains objects where each object key value are the attributes of that object.
 
 ```json
-{
-    "categories": {
-        "1": "Movies",
-        "2": "Tv Series"
-    },
+ "Movies": [
+        {
+            "category": 1,
+            "id": 1,
+            "isbookmarked": false,
+            "istrending": true,
+            "rating": "PG",
+            "thumbnails": "./assets/thumbnails/beyond-earth/trending/small.jpg",
+            "title": "Beyond Earth",
+            "year": 2019
+        },
+        {
+            "category": 2,
+            "id": 3,
+            "isbookmarked": false,
+            "istrending": true,
+            "rating": "18+",
+            "thumbnails": "./assets/thumbnails/autosport-the-series/regular/large.jpg",
+            "title": "Autosport the Series",
+            "year": 2016
+        },
+    ],
     "success": true,
-    "total_categories": 2
+    "totalMovies": 2
 }
+
 ```
